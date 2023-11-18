@@ -21,6 +21,11 @@ class CSSBundler:
             '/static/css/'
         )
 
+        self.bundles_folder = app.config.get(
+            'CSS_BUNDLER_BUNDLES_FOLDER',
+            ''
+        )
+
         self.bucket_url = app.config.get(
             'CSS_BUNDLER_BUCKET_URL'
         )
@@ -37,6 +42,14 @@ class CSSBundler:
 
         if self.bucket_url is not None and self.bucket_url[-1] != '/':
             self.bucket_url += '/'
+
+        self.bundles_folder.replace('\\', '')
+
+        if self.bundles_folder != '' and self.bundles_folder[-1] != '/':
+            self.bundles_folder += '/'
+            
+            if self.bundles_folder[0] == '/':
+                self.bundles_folder = self.bundles_folder[1:]
 
     def init_app(self, app):
         app.jinja_env.globals.update(
@@ -58,7 +71,9 @@ class CSSBundler:
             with open(stylesheet[1:], 'rb') as css_file:
                 bundled_css += css_file.read() + b'\n'
 
-        with open(self.css_files_path[1:] + bundle_filename, 'wb') as bundled_file:
+        bundle_path = self.css_files_path[1:] + self.bundles_folder + bundle_filename
+
+        with open(bundle_path, 'wb') as bundled_file:
             bundled_file.write(bundled_css)
     
     def __prepare_stylesheet(self, custom_paths: dict, stylesheets: dict) -> str:
