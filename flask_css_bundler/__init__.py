@@ -124,6 +124,6 @@ class CSSBundler:
         if self.bucket_url is not None and self.use_bucket_url is True:
             bundled_stylesheets = self.bucket_url + bundle_filename
         else:
-            bundled_stylesheets = self.css_files_path + bundle_filename
+            bundled_stylesheets = self.css_files_path + self.bundles_folder + bundle_filename
 
         return [self.stylesheet_tag.format(stylesheet=bundled_stylesheets)]
