@@ -99,8 +99,21 @@ class CSSBundler:
 
                 if len(args) > 0:
                     args = ''.join(args).split(',')
-                    args = list(map(lambda arg: arg.replace("'", '').replace('"', '').replace(' ', '').replace('\n', ''), args))
-                    print(args)
+                    args = list(
+                        map(
+                            lambda arg: arg\
+                                .replace("'", '')\
+                                .replace('"', '')\
+                                .replace(' ', '')\
+                                .replace('\n', '')\
+                                .replace('\t', '')\
+                                .replace('\r', '')\
+                                .replace('\f', '')\
+                                .replace('\v', ''),
+                            args
+                        )
+                    )
+
                     self.__process_bundling(*args, custom_paths={})
     
     def __prepare_stylesheet(self, custom_paths: dict, stylesheets: List[str]) -> str:
