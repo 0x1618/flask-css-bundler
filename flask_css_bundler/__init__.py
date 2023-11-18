@@ -89,7 +89,7 @@ class CSSBundler:
             bundled_file.write(bundled_css)
 
     def generate_all_bundles(self):
-        pattern = re.compile(r'.*CSSBUNDLE\((.*?)\)')
+        pattern = re.compile(r'.*CSSBUNDLE\(([\s\S]*?)\)')
         html_files = glob.glob(f'{self.templates_path}**/*.html', recursive=True)
 
         for html_file in html_files:
@@ -99,8 +99,8 @@ class CSSBundler:
 
                 if len(args) > 0:
                     args = ''.join(args).split(',')
-                    args = list(map(lambda arg: arg.replace("'", '').replace('"', '').replace(' ', ''), args))
-
+                    args = list(map(lambda arg: arg.replace("'", '').replace('"', '').replace(' ', '').replace('\n', ''), args))
+                    print(args)
                     self.__process_bundling(*args, custom_paths={})
     
     def __prepare_stylesheet(self, custom_paths: dict, stylesheets: List[str]) -> str:
