@@ -156,4 +156,4 @@ class CSSBundler:
         return [self.stylesheet_tag.format(stylesheet=bundled_stylesheets)]
 
     def __bundler(self, *args, custom_paths: dict = {}):
-        return self.__process_bundling(*args, custom_paths)
+        return self.__process_bundling(*args, custom_paths=custom_paths)
