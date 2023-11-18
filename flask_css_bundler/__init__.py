@@ -1,10 +1,17 @@
 from hashlib import md5
 from typing import List
+import re
+import glob
 
 class CSSBundler:
     def __init__(self, app=None):
         if app is not None:
             self.init_app(app)
+
+    def init_app(self, app):
+        app.jinja_env.globals.update(
+            CSSBUNDLE=self.__bundler
+        )
 
         self.stylesheet_tag = app.config.get(
             'CSS_BUNDLER_CUSTOM_TAG',
@@ -40,21 +47,26 @@ class CSSBundler:
             False
         )
 
+        self.templates_path = app.config.get(
+            'CSS_BUNDLER_TEMPLATES_PATH',
+            'templates/'
+        )
+
         if self.bucket_url is not None and self.bucket_url[-1] != '/':
             self.bucket_url += '/'
 
         self.bundles_folder.replace('\\', '')
+        self.css_files_path.replace('\\', '')
+        self.templates_path.replace('\\', '')
+
+        if self.templates_path is not None and self.templates_path[-1] != '/':
+            self.templates_path += '/'
 
         if self.bundles_folder != '' and self.bundles_folder[-1] != '/':
             self.bundles_folder += '/'
             
             if self.bundles_folder[0] == '/':
                 self.bundles_folder = self.bundles_folder[1:]
-
-    def init_app(self, app):
-        app.jinja_env.globals.update(
-            CSSBUNDLE=self.__bundler
-        )
 
     def generate_bundle_filename(self, stylesheets: List[str]) -> str:
         _hash = md5()
@@ -75,8 +87,23 @@ class CSSBundler:
 
         with open(bundle_path, 'wb') as bundled_file:
             bundled_file.write(bundled_css)
+
+    def generate_all_bundles(self):
+        pattern = re.compile(r'.*CSSBUNDLE\((.*?)\)')
+        html_files = glob.glob(f'{self.templates_path}**/*.html', recursive=True)
+
+        for html_file in html_files:
+            with open(html_file, 'r', encoding='utf-8') as file:
+                content = file.read()
+                args = re.findall(pattern, content)
+
+                if len(args) > 0:
+                    args = ''.join(args).split(',')
+                    args = list(map(lambda arg: arg.replace("'", '').replace('"', '').replace(' ', ''), args))
+
+                    self.__process_bundling(*args, custom_paths={})
     
-    def __prepare_stylesheet(self, custom_paths: dict, stylesheets: dict) -> str:
+    def __prepare_stylesheet(self, custom_paths: dict, stylesheets: List[str]) -> str:
         prepared_stylsheets = []
 
         for stylesheet in stylesheets:
@@ -97,7 +124,7 @@ class CSSBundler:
 
         return prepared_stylsheets
 
-    def __bundler(self, *args, custom_paths: dict = {}):
+    def __process_bundling(self, *args, custom_paths: dict = {}):
         stylesheets = self.__prepare_stylesheet(
             custom_paths=custom_paths,
             stylesheets=args
@@ -127,3 +154,6 @@ class CSSBundler:
             bundled_stylesheets = self.css_files_path + self.bundles_folder + bundle_filename
 
         return [self.stylesheet_tag.format(stylesheet=bundled_stylesheets)]
+
+    def __bundler(self, *args, custom_paths: dict = {}):
+        return self.__process_bundling(*args, custom_paths)
